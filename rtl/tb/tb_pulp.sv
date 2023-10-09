@@ -63,7 +63,7 @@ module tb_pulp;
      parameter  USE_S25FS256S_MODEL = 0;
      parameter  USE_24FC1025_MODEL  = 0;
      parameter  USE_I2S_MODEL       = 0;
-     parameter  USE_HYPER_MODELS    = 0;
+     parameter  USE_HYPER_MODELS    = 1;
 `endif
     //psram model, cannot be tested simultaneously with the hyperram
 `ifdef TARGET_PSRAM_VIP
@@ -85,10 +85,10 @@ module tb_pulp;
 
    // how L2 is loaded. valid values are "JTAG" or "STANDALONE", the latter works only when USE_S25FS256S_MODEL is 1
    parameter  LOAD_L2 = "JTAG";
-
    // STIM_FROM sets where is the image data.
    // In case any values are not given, the debug module takes over the boot process.
-   parameter  STIM_FROM = "JTAG"; // can be "JTAG" "SPI_FLASH", "HYPER_FLASH", or ""
+   //parameter  STIM_FROM = "JTAG"; // can be "JTAG" "SPI_FLASH", "HYPER_FLASH", or ""
+   parameter  STIM_FROM = "HYPER_FLASH"; // can be "JTAG" "SPI_FLASH", "HYPER_FLASH", or ""
 
    // enable DPI-based JTAG
    parameter  ENABLE_DPI = 0;
@@ -455,7 +455,9 @@ module tb_pulp;
          if (STIM_FROM == "HYPER_FLASH") begin
             s26ks512s #(
                .TimingModel   ( "S26KS512SDPBHI000"),
-               .mem_file_name ( "./vectors/hyper_stim.slm" )
+               //.mem_file_name ( "./vectors/hyper_stim.slm" )
+               .mem_file_name ( "./slm_files/flash_stim.slm" )
+               //.secsi_file_name ( "./slm_files/l2_stim.slm" )
             ) hyperflash_model (
                .DQ7      ( w_hyper_dq0[7] ),
                .DQ6      ( w_hyper_dq0[6] ),
@@ -509,7 +511,8 @@ module tb_pulp;
       if(USE_S25FS256S_MODEL == 1) begin
          s25fs256s #(
             .TimingModel   ( "S25FS256SAGMFI000_F_30pF" ),
-            .mem_file_name ( "./vectors/qspi_stim.slm" ),
+            //.mem_file_name ( "./vectors/qspi_stim.slm" ),
+            //.mem_file_name ( "./slm_files/flash_stim.slm" ),
             .UserPreload   ( ( LOAD_L2 == "STANDALONE" ) ? 1 : 0 )
          ) i_spi_flash_csn0 (
             .SI       ( w_spi_master_sdio0 ),
@@ -796,10 +799,11 @@ module tb_pulp;
          $display("[TB] %t - Entry point is set to 0x%h", $realtime, begin_l2_instr);
 
          $display("[TB] %t - Asserting hard reset", $realtime);
+         $display("[TB] %d, %s", USE_HYPER_MODELS, STIM_FROM);
          s_rst_n = 1'b0;
 
          #1ns
-
+         
          uart_tb_rx_en  = 1'b1; // enable uart rx in testbench
 
          if (ENABLE_OPENOCD == 1) begin

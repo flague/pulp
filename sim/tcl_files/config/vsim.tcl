@@ -52,6 +52,8 @@ quietly set common_args "\
   $design_libs \
   $warning_args \
   $define_args \
+  +nospecify \
+  +notimingcheck \
   "
 
 quietly set custom_args "\
@@ -92,7 +94,7 @@ if {$vopt_acc_ena == "YES"} {
                                        -bitscalars \
                                        -fsmdebug \
                                        -linedebug"
-}
+                                     }
 if {[info exists vopt_cov]} {
   quietly append vopt_args $vopt_args $vopt_cov
 }
@@ -137,6 +139,7 @@ if {[info exists ::env(VOPT_FLOW)]} {
 
     # check exit status in tb and quit the simulation accordingly
     proc run_and_exit {} {
+        source ./tcl_files/config/export_vcd.tcl
         run -all
 	if {[info exists ::env(VSIM_EXIT_SIGNAL)]} {
 	    quit -code [examine -radix decimal sim:$::env(VSIM_EXIT_SIGNAL)]
